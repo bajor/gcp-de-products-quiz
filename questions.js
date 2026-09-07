@@ -353,15 +353,15 @@
     { id: "hard-dataflow-016", product: "Dataflow worker autoscaling", cue: "vary workers with backlog", description: "An event backlog rises sharply during business hours and falls overnight, so a managed pipeline should adjust worker count to maintain throughput without fixed peak capacity.", distractors: ["Dataflow Streaming Engine", "BigQuery reservations"], explanation: "Worker autoscaling adjusts processing capacity to workload demand. Streaming Engine changes the streaming execution architecture, while reservations allocate BigQuery slots.", tags: ["processing", "operations"], priority: "P0", confusionSet: "dataflow-runtime" }
   ];
 
-  const primaryDescriptions = new Map();
-  FACTS.forEach((fact) => {
-    if (!primaryDescriptions.has(fact.product)) {
-      primaryDescriptions.set(fact.product, fact.description);
-    }
-  });
-
   const productNames = [...new Set(FACTS.flatMap((fact) => [fact.product, ...fact.distractors]))]
     .sort((left, right) => right.length - left.length);
+
+  const advancedFactsByConfusionSet = new Map();
+  FACTS.filter((fact) => fact.id.startsWith("hard-") && fact.priority !== "P2").forEach((fact) => {
+    const facts = advancedFactsByConfusionSet.get(fact.confusionSet) || [];
+    facts.push(fact);
+    advancedFactsByConfusionSet.set(fact.confusionSet, facts);
+  });
 
   function normalizeText(value) {
     return ` ${value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `;
@@ -417,9 +417,6 @@
   const generatedQuestions = FACTS
     .filter((fact) => fact.priority !== "P2")
     .flatMap((fact) => {
-      const distractorDescriptions = fact.distractors.map((product) => (
-        neutralizeProductNames(primaryDescriptions.get(product) || "A plausible alternative that does not meet the requirement.")
-      ));
       const descriptionQuestion = {
         id: `${fact.id}-description`,
         type: "description_to_product",
@@ -436,11 +433,20 @@
         return [descriptionQuestion];
       }
 
+      const scenarioDistractors = (advancedFactsByConfusionSet.get(fact.confusionSet) || [])
+        .filter((candidate) => candidate.id !== fact.id)
+        .slice(0, 2)
+        .map((candidate) => neutralizeProductNames(candidate.description));
+
+      if (scenarioDistractors.length !== 2) {
+        return [descriptionQuestion];
+      }
+
       const productQuestion = {
         id: `${fact.id}-product`,
         type: "product_to_description",
         prompt: `A team selected ${fact.product} for a production data platform. Which requirement most strongly justifies that decision?`,
-        answers: [neutralizeProductNames(fact.description), ...distractorDescriptions],
+        answers: [neutralizeProductNames(fact.description), ...scenarioDistractors],
         correct: 0,
         explanation: fact.explanation,
         tags: fact.tags,
