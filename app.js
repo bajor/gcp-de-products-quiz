@@ -35,7 +35,10 @@
 
   function init() {
     state.questions = window.GCP_DE_QUESTIONS || [];
-    validateQuestions(state.questions);
+    if (!validateQuestions(state.questions)) {
+      elements.bankStatus.textContent = "Question bank validation failed. See the browser console for details.";
+      return;
+    }
     populateDomainFilter(state.questions);
     bindEvents();
     rebuildDeck();
@@ -229,7 +232,7 @@
       return;
     }
 
-    if (["1", "2", "3"].includes(event.key)) {
+    if (["1", "2", "3", "4"].includes(event.key)) {
       chooseAnswer(Number(event.key) - 1);
     }
 
@@ -274,16 +277,22 @@
         errors.push(`${question.id} has invalid type: ${question.type}.`);
       }
 
-      if (!Array.isArray(question.answers) || question.answers.length !== 3) {
-        errors.push(`${question.id} must have exactly 3 answers.`);
+      if (!Array.isArray(question.answers) || question.answers.length !== 4) {
+        errors.push(`${question.id} must have exactly 4 answers.`);
       } else {
-        const normalizedAnswers = question.answers.map((answer) => answer.trim().toLowerCase());
-        if (new Set(normalizedAnswers).size !== 3) {
+        const hasInvalidAnswer = question.answers.some((answer) => (
+          typeof answer !== "string"
+          || answer.trim() === ""
+          || answer.trim().toLowerCase() === "lorem ipsum"
+        ));
+        if (hasInvalidAnswer) {
+          errors.push(`${question.id} has an empty or placeholder answer.`);
+        } else if (new Set(question.answers.map((answer) => answer.trim().toLowerCase())).size !== 4) {
           errors.push(`${question.id} has duplicate answers.`);
         }
       }
 
-      if (!Number.isInteger(question.correct) || question.correct < 0 || question.correct > 2) {
+      if (!Number.isInteger(question.correct) || question.correct < 0 || question.correct > 3) {
         errors.push(`${question.id} has invalid correct answer index: ${question.correct}.`);
       }
 
@@ -297,6 +306,8 @@
     } else {
       console.info(`Question bank validation passed: ${questions.length} questions.`);
     }
+
+    return errors.length === 0;
   }
 
   function shuffle(items) {

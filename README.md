@@ -30,11 +30,11 @@ Optimize for **fast repetition and discrimination between similar services**, no
 
 ## 2. Hard scope: only two question formats
 
-Every question must have **exactly 3 answer choices** and exactly 1 correct answer.
+Every question must have **exactly 4 answer choices** and exactly 1 correct answer.
 
 ### Type A — product -> description
 
-Show a product/service name, then three possible descriptions.
+Show a product/service name, then four possible descriptions.
 
 Example:
 
@@ -43,10 +43,11 @@ Example:
 - A managed Apache Airflow service for workflow orchestration. ✅
 - A serverless execution engine for short API workflows.
 - A SQL transformation framework for BigQuery.
+- A managed service for storing application secrets.
 
 ### Type B — description -> product
 
-Show a concise product description/use case, then three product names.
+Show a concise product description/use case, then four product names.
 
 Example:
 
@@ -55,6 +56,7 @@ Example:
 - Datastream ✅
 - Storage Transfer Service
 - BigQuery Data Transfer Service
+- Database Migration Service
 
 Do **not** add other question formats in the initial implementation.
 
@@ -356,7 +358,7 @@ Each question object should include:
 - unique id;
 - type: `product_to_description` or `description_to_product`;
 - prompt;
-- exactly 3 answers;
+- exactly 4 answers;
 - correct answer index/id;
 - short explanation;
 - product/topic tags;
@@ -399,7 +401,7 @@ Examples:
 - BigLake / Dataplex / Cloud Storage
 - BI Engine / materialized views / reservations
 
-For P0 products, deliberately generate many questions where the two wrong choices are the **two most plausible alternatives**.
+For P0 products, deliberately generate many questions where the three wrong choices are the **three most plausible alternatives**.
 
 ---
 
@@ -547,7 +549,7 @@ Preferred shape:
 Add a lightweight validation function that fails loudly in the browser console if:
 
 - ids are duplicated;
-- a question does not have exactly 3 answers;
+- a question does not have exactly 4 answers;
 - correct index is invalid;
 - an answer is duplicated;
 - required fields are missing.
@@ -596,7 +598,7 @@ Programmatically validate the whole question bank.
 Check:
 
 - count >= 350;
-- every question has exactly 3 unique choices;
+- every question has exactly 4 unique choices;
 - unique ids;
 - answer index valid;
 - no identical prompts;
@@ -686,7 +688,7 @@ The project is done when:
 
 1. GitHub Pages serves a fast static page.
 2. There are at least 350 non-trivial questions.
-3. Every question has exactly 3 choices.
+3. Every question has exactly 4 choices.
 4. Both required question directions are well represented.
 5. P0 products have strong coverage.
 6. Distractors come mainly from meaningful confusion sets.
