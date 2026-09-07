@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "gcpPdeProductQuizProgress.v1";
   const REQUIRED_COUNT = 350;
+  const PROMPT_PREFIX = "A data platform team must choose an architecture component whose trade-offs fit this requirement: ";
   const state = {
     questions: [],
     deck: [],
@@ -141,7 +142,9 @@
     state.selected = false;
     elements.questionCount.textContent = `Question ${state.index + 1} / ${state.deck.length}`;
     elements.questionType.textContent = question.type === "product_to_description" ? "Product to description" : "Description to product";
-    elements.prompt.textContent = question.prompt;
+    elements.prompt.textContent = question.prompt.startsWith(PROMPT_PREFIX)
+      ? question.prompt.slice(PROMPT_PREFIX.length)
+      : question.prompt;
     elements.explanation.hidden = true;
     elements.explanation.textContent = question.explanation;
     elements.nextButton.disabled = true;
