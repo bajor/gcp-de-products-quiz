@@ -279,9 +279,6 @@
     { id: "dataflow-flex-template-001", product: "Dataflow Flex Templates", cue: "containerized parameterized pipeline", description: "Dataflow deployment template that packages pipeline code and dependencies in a container image for parameterized execution.", distractors: ["Classic Dataflow templates", "Cloud Run"], explanation: "Flex Templates package the pipeline in a container image. Classic templates have a different packaging model, and Cloud Run runs application containers rather than Dataflow pipelines.", tags: ["processing", "deployment"], priority: "P0", confusionSet: "dataflow-runtime" },
     { id: "dataflow-classic-template-001", product: "Classic Dataflow templates", cue: "prebuilt pipeline graph", description: "Legacy-style Dataflow template that separates a prebuilt pipeline graph from runtime parameters.", distractors: ["Dataflow Flex Templates", "Cloud Composer"], explanation: "Classic templates are prebuilt Dataflow pipeline templates. Flex Templates use a containerized launch model, while Composer orchestrates workflows.", tags: ["processing", "deployment"], priority: "P1", confusionSet: "dataflow-runtime" },
     { id: "dataflow-rebalancing-001", product: "Dataflow dynamic work rebalancing", cue: "split remaining work", description: "Dataflow capability that redistributes remaining work from slow workers to idle workers during batch execution.", distractors: ["Dataflow autoscaling", "Dataproc autoscaling"], explanation: "Dynamic work rebalancing redistributes unfinished work. Dataflow autoscaling changes worker resources, while Dataproc autoscaling changes cluster workers.", tags: ["processing", "batch"], priority: "P0", confusionSet: "dataflow-runtime" },
-    { id: "dataflow-drain-001", product: "Dataflow drain", cue: "gracefully stop a streaming job", description: "Job operation that stops new input and lets an unbounded Dataflow pipeline finish processing in-flight data where supported.", distractors: ["Dataflow cancel", "Cloud Composer pause"], explanation: "Draining is the graceful Dataflow stop operation for streaming pipelines. Cancel stops a job immediately, while pausing belongs to orchestration tooling.", tags: ["processing", "operations"], priority: "P1", confusionSet: "dataflow-runtime" },
-    { id: "dataflow-cancel-001", product: "Dataflow cancel", cue: "immediately stop job", description: "Job operation that stops a Dataflow job immediately rather than allowing in-flight streaming data to drain.", distractors: ["Dataflow drain", "Dataflow snapshot"], explanation: "Cancel immediately stops the job. Drain aims to finish processing in-flight data, while snapshots preserve streaming pipeline state for recovery or updates.", tags: ["processing", "operations"], priority: "P1", confusionSet: "dataflow-runtime" },
-    { id: "dataflow-snapshot-001", product: "Dataflow snapshots", cue: "preserve streaming pipeline state", description: "Dataflow capability for capturing the state of a streaming pipeline for recovery, testing, or migration scenarios.", distractors: ["Dataflow drain", "BigQuery table snapshots"], explanation: "Dataflow snapshots preserve streaming pipeline state. Drain controls shutdown behavior, and BigQuery table snapshots preserve BigQuery table data.", tags: ["processing", "operations"], priority: "P1", confusionSet: "dataflow-runtime" },
     { id: "bigquery-result-cache-001", product: "BigQuery query result cache", cue: "reuse unchanged query results", description: "BigQuery behavior that can reuse a previous identical query result when the referenced data and query conditions allow it.", distractors: ["BigQuery materialized views", "BigQuery BI Engine"], explanation: "The result cache reuses a prior query result opportunistically. Materialized views persist managed precomputed results, and BI Engine is an in-memory BI accelerator.", tags: ["bigquery", "performance"], priority: "P0", confusionSet: "bigquery-performance" },
     { id: "bigquery-dry-run-001", product: "BigQuery dry run", cue: "estimate query bytes", description: "Query validation mode that estimates bytes processed without executing the query or incurring query processing charges.", distractors: ["BigQuery query result cache", "BigQuery reservations"], explanation: "A dry run validates and estimates query processing. Result caching reuses completed query results, while reservations allocate capacity.", tags: ["bigquery", "cost"], priority: "P0", confusionSet: "bigquery-cost" },
     { id: "bigquery-maximum-bytes-billed-001", product: "BigQuery maximum bytes billed", cue: "cap on-demand query cost", description: "Query setting that rejects an on-demand query when its estimated processed bytes exceed a specified cost-control limit.", distractors: ["BigQuery dry run", "BigQuery reservations"], explanation: "Maximum bytes billed is a guardrail that can prevent an expensive on-demand query. A dry run estimates bytes, while reservations use capacity commitments.", tags: ["bigquery", "cost"], priority: "P0", confusionSet: "bigquery-cost" },
@@ -351,6 +348,7 @@
     { id: "hard-dataflow-014", product: "Dataflow snapshots", cue: "preserve stateful stream progress", description: "Before a risky change, operators need to capture the current state and progress of a streaming pipeline so it can be recovered or restarted from that point.", distractors: ["Dataflow drain", "Dataflow cancel"], explanation: "Snapshots preserve the state of supported streaming jobs for recovery scenarios. Drain gracefully finishes in-flight work, while cancel stops immediately.", tags: ["processing", "operations"], priority: "P1", confusionSet: "dataflow-runtime" },
     { id: "hard-dataflow-015", product: "Apache Beam state and timers", cue: "per-key inactivity detection", description: "A pipeline must remember each device's last event and emit an alert only after that specific device has been inactive for a defined duration.", distractors: ["Apache Beam side inputs", "Apache Beam event-time windows"], explanation: "State and timers hold per-key information and schedule future work. Side inputs are broadcast references, while windows group elements but do not by themselves retain arbitrary per-key state.", tags: ["processing", "beam"], priority: "P0", confusionSet: "dataflow-event-time" },
     { id: "hard-dataflow-016", product: "Dataflow worker autoscaling", cue: "vary workers with backlog", description: "An event backlog rises sharply during business hours and falls overnight, so a managed pipeline should adjust worker count to maintain throughput without fixed peak capacity.", distractors: ["Dataflow Streaming Engine", "BigQuery reservations"], explanation: "Worker autoscaling adjusts processing capacity to workload demand. Streaming Engine changes the streaming execution architecture, while reservations allocate BigQuery slots.", tags: ["processing", "operations"], priority: "P0", confusionSet: "dataflow-runtime" },
+    { id: "hard-dataflow-017", product: "Dataflow cancel", cue: "immediately halt unsafe processing", description: "A faulty streaming deployment is producing unsafe downstream side effects. Operators must stop the job immediately, accept that in-flight work can be lost, and prevent any further processing rather than waiting for a graceful completion.", distractors: ["Dataflow drain", "Dataflow snapshots"], explanation: "Cancel immediately terminates the job when continuing or draining is unsafe. Drain attempts graceful completion, while snapshots preserve state for later recovery or migration.", tags: ["processing", "operations"], priority: "P1", confusionSet: "dataflow-runtime" },
     { id: "hard-biglake-001", product: "BigLake", cue: "delegated lake-table access", description: "Parquet files remain in an organization's object storage under a storage administrator's control, but analytics users must query them through table-level permissions without receiving direct object permissions on the bucket.", distractors: ["BigQuery external tables", "Dataplex"], explanation: "BigLake provides a governed table layer and delegated access to underlying lake data. Standard external tables expose files to SQL, while Dataplex governs the broader estate rather than providing the table access layer.", tags: ["storage", "lakehouse"], priority: "P0", confusionSet: "biglake-access" },
     { id: "hard-biglake-002", product: "BigLake Iceberg tables", cue: "open lakehouse tables", description: "A lakehouse stores curated data in an open table format in object storage, must retain cross-engine interoperability, and needs warehouse SQL analytics without copying the data into proprietary warehouse storage.", distractors: ["BigQuery native tables", "Dataplex"], explanation: "BigLake Iceberg tables support an open Iceberg lakehouse table format with BigQuery access. Native tables move data into BigQuery-managed storage, while Dataplex supplies broader governance and catalog capabilities.", tags: ["storage", "lakehouse"], priority: "P0", confusionSet: "biglake-iceberg" },
     { id: "hard-biglake-003", product: "BigQuery Omni with BigLake tables", cue: "governed cross-cloud lake query", description: "Regulatory and transfer-cost constraints require data to remain in Amazon S3, while Google Cloud analysts need managed SQL and governed table access instead of downloading the data or granting every analyst direct object-store credentials.", distractors: ["Storage Transfer Service", "BigQuery Data Transfer Service"], explanation: "BigQuery Omni with BigLake tables analyzes supported cross-cloud lake data in place with a governed table abstraction. Transfer services copy or load data instead of querying it where it resides.", tags: ["storage", "lakehouse"], priority: "P0", confusionSet: "biglake-cross-cloud" },
@@ -415,14 +413,47 @@
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  function neutralizeProductNames(value) {
-    return productNames.reduce((text, product) => (
-      text.replace(new RegExp(`\\b${escapeRegExp(product)}\\b`, "gi"), "the selected service")
-    ), value);
+  function architectureTermReplacement(term) {
+    if (term.includes("bigquery")) {
+      return "the analytical warehouse";
+    }
+    if (term.includes("cloud storage")) {
+      return "object storage";
+    }
+    if (term.includes("dataflow")) {
+      return "the stream-processing service";
+    }
+    if (term.includes("dataproc") || term.includes("spark")) {
+      return "the Spark execution environment";
+    }
+    if (term.includes("cloud sql") || term.includes("alloydb") || term.includes("spanner")) {
+      return "the operational database";
+    }
+    return "the platform component";
   }
 
-  function scenarioPrompt(description) {
-    return `A data engineering team must make a production design choice. The requirement is: ${neutralizeProductNames(description)} Which Google Cloud product or feature is the best fit?`;
+  function neutralizeAnswerNames(value, answers) {
+    const answerTermsWithCounts = new Map();
+    answers.forEach((answer) => {
+      new Set(answerTerms({ type: "description_to_product" }, answer)).forEach((term) => {
+        answerTermsWithCounts.set(term, (answerTermsWithCounts.get(term) || 0) + 1);
+      });
+    });
+
+    return [...answerTermsWithCounts]
+      .filter(([, count]) => count === 1)
+      .map(([term]) => term)
+      .sort((left, right) => right.length - left.length)
+      .reduce((text, term) => {
+        const pattern = term.split(" ").map(escapeRegExp).join("[^a-z0-9]+");
+        return text.replace(new RegExp(`\\b${pattern}\\b`, "gi"), architectureTermReplacement(term));
+      }, value);
+  }
+
+  function scenarioPrompt(fact) {
+    const answers = [fact.product, ...fact.distractors];
+    const requirement = neutralizeAnswerNames(fact.description, answers);
+    return `A data platform team must choose an architecture component whose trade-offs fit this requirement: ${requirement} Which Google Cloud product or feature is the best fit?`;
   }
 
   function hasAnswerNameLeak(question) {
@@ -435,13 +466,19 @@
     });
   }
 
+  function hasGeneratedPlaceholder(question) {
+    return question.prompt.includes("the selected service")
+      || question.prompt.includes("the platform component")
+      || question.answers.some((answer) => answer.includes("plausible distractor"));
+  }
+
   const generatedQuestions = FACTS
     .filter((fact) => fact.priority !== "P2")
     .flatMap((fact) => {
       const descriptionQuestion = {
         id: `${fact.id}-description`,
         type: "description_to_product",
-        prompt: scenarioPrompt(fact.description),
+        prompt: scenarioPrompt(fact),
         answers: [fact.product, ...fact.distractors],
         correct: 0,
         explanation: fact.explanation,
@@ -454,23 +491,27 @@
         return [descriptionQuestion];
       }
 
-      const scenarioDistractors = (advancedFactsByConfusionSet.get(fact.confusionSet) || [])
+      const scenarioDistractorFacts = (advancedFactsByConfusionSet.get(fact.confusionSet) || [])
         .filter((candidate) => candidate.id !== fact.id)
         .filter((candidate, index, candidates) => (
           candidate.product !== fact.product && candidates.findIndex((other) => other.product === candidate.product) === index
         ))
-        .slice(0, 2)
-        .map((candidate) => neutralizeProductNames(candidate.description));
+        .slice(0, 2);
 
-      if (scenarioDistractors.length !== 2) {
+      if (scenarioDistractorFacts.length !== 2) {
         return [descriptionQuestion];
       }
+
+      const productQuestionAnswers = [fact.product, ...scenarioDistractorFacts.map((candidate) => candidate.product)];
+      const scenarioDistractors = scenarioDistractorFacts.map((candidate) => (
+        neutralizeAnswerNames(candidate.description, productQuestionAnswers)
+      ));
 
       const productQuestion = {
         id: `${fact.id}-product`,
         type: "product_to_description",
         prompt: `A team selected ${fact.product} for a production data platform. Which requirement most strongly justifies that decision?`,
-        answers: [neutralizeProductNames(fact.description), ...scenarioDistractors],
+        answers: [neutralizeAnswerNames(fact.description, productQuestionAnswers), ...scenarioDistractors],
         correct: 0,
         explanation: fact.explanation,
         tags: fact.tags,
@@ -486,7 +527,7 @@
     });
 
   function shouldExclude(question) {
-    return hasAnswerNameLeak(question);
+    return hasAnswerNameLeak(question) || hasGeneratedPlaceholder(question);
   }
 
   const questions = generatedQuestions.filter((question) => !shouldExclude(question));

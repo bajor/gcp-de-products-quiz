@@ -86,7 +86,7 @@ Questions should test:
 
 The correct answer should usually depend on a **defining differentiator**, not generic wording that applies to multiple products.
 
-Every active question must be framed as a production product-selection or product-justification decision. Do not publish bare `Product - cue` recognition prompts: the prompt must require the learner to connect a requirement to the product, or to justify why a selected product fits that requirement. Product-justification choices must all be comparable production scenarios, never a mix of scenarios and definition fragments. Keep P2 products primarily as plausible distractors rather than standalone recall questions.
+Every active question must be framed as an architecture product-selection or product-justification decision. The prompt must make the relevant workload, operational constraint, and trade-off explicit, then ask for the component that best fits. Do not publish bare `Product - cue` recognition prompts, generated fallback answers, or placeholder wording such as "the selected service." Product-justification choices must all be comparable production scenarios, never a mix of scenarios and definition fragments. Keep P2 products primarily as plausible distractors rather than standalone recall questions.
 
 ---
 
