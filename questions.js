@@ -360,14 +360,8 @@
     }
   });
 
-  const PRODUCT_BRANDS = [
-    "analytics hub", "alloydb", "apache beam", "artifact registry", "biglake", "bigquery", "bigtable",
-    "cloud composer", "cloud data fusion", "cloud functions", "cloud kms", "cloud logging", "cloud monitoring",
-    "cloud run", "cloud sql", "cloud storage", "cloud vpn", "dataflow", "dataform", "database migration service",
-    "dataplex", "dataproc", "datastream", "firestore", "iam", "looker", "memorystore", "private google access",
-    "private service connect", "pub sub", "secret manager", "sensitive data protection", "spanner",
-    "storage transfer service", "transfer appliance", "vertex ai", "workflows"
-  ];
+  const productNames = [...new Set(FACTS.flatMap((fact) => [fact.product, ...fact.distractors]))]
+    .sort((left, right) => right.length - left.length);
 
   function normalizeText(value) {
     return ` ${value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `;
@@ -377,9 +371,10 @@
     const normalizedAnswer = normalizeText(answer).trim();
     const terms = new Set([normalizedAnswer]);
 
-    PRODUCT_BRANDS.forEach((brand) => {
-      if (normalizedAnswer.includes(brand)) {
-        terms.add(brand);
+    productNames.forEach((brand) => {
+      const normalizedBrand = normalizeText(brand).trim();
+      if (normalizedAnswer.includes(normalizedBrand)) {
+        terms.add(normalizedBrand);
       }
     });
 
@@ -395,6 +390,20 @@
     return [...terms].filter((term) => term.length > 2);
   }
 
+  function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function neutralizeProductNames(value) {
+    return productNames.reduce((text, product) => (
+      text.replace(new RegExp(`\\b${escapeRegExp(product)}\\b`, "gi"), "the selected service")
+    ), value);
+  }
+
+  function scenarioPrompt(description) {
+    return `A data engineering team must make a production design choice. The requirement is: ${neutralizeProductNames(description)} Which Google Cloud product or feature is the best fit?`;
+  }
+
   function hasAnswerNameLeak(question) {
     const prompt = normalizeText(question.prompt);
     const terms = new Set(question.answers.flatMap((answer) => answerTerms(question, answer)));
@@ -405,49 +414,49 @@
     });
   }
 
-  const REVIEW_EXCLUDED_FACT_IDS = new Set([
-    "bigquery-001", "bigquery-003", "bigquery-005", "bigquery-bi-engine-001", "bigquery-bi-engine-003",
-    "bigquery-materialized-views-001", "bigquery-materialized-views-003", "bigquery-architecture-005",
-    "bigquery-external-tables-001", "bigquery-external-tables-002", "bigquery-federated-queries-001",
-    "bigquery-federated-queries-002", "biglake-001", "biglake-002", "dataflow-001", "dataflow-003",
-    "dataflow-004", "apache-beam-001", "apache-beam-002", "pubsub-001", "pubsub-002", "dataproc-001",
-    "dataproc-003", "data-fusion-001", "data-fusion-003", "dataform-001", "dataform-003", "composer-001",
-    "composer-003", "workflows-001", "workflows-002", "cloud-storage-001", "cloud-storage-003", "bigtable-001",
-    "bigtable-003", "spanner-001", "spanner-003", "cloud-sql-001", "cloud-sql-003", "alloydb-001"
-  ]);
-
-  const generatedQuestions = FACTS.flatMap((fact) => {
-    const distractorDescriptions = fact.distractors.map((product) => primaryDescriptions.get(product) || `${product} is a plausible distractor, but it does not match this defining use case.`);
-
-    return [
-      {
-        id: `${fact.id}-product`,
-        type: "product_to_description",
-        prompt: `${fact.product} - ${fact.cue}`,
-        answers: [fact.description, ...distractorDescriptions],
-        correct: 0,
-        explanation: fact.explanation,
-        tags: fact.tags,
-        priority: fact.priority,
-        confusionSet: fact.confusionSet
-      },
-      {
+  const generatedQuestions = FACTS
+    .filter((fact) => fact.priority !== "P2")
+    .flatMap((fact) => {
+      const distractorDescriptions = fact.distractors.map((product) => (
+        neutralizeProductNames(primaryDescriptions.get(product) || "A plausible alternative that does not meet the requirement.")
+      ));
+      const descriptionQuestion = {
         id: `${fact.id}-description`,
         type: "description_to_product",
-        prompt: fact.description,
+        prompt: scenarioPrompt(fact.description),
         answers: [fact.product, ...fact.distractors],
         correct: 0,
         explanation: fact.explanation,
         tags: fact.tags,
         priority: fact.priority,
         confusionSet: fact.confusionSet
+      };
+
+      if (!fact.id.startsWith("hard-")) {
+        return [descriptionQuestion];
       }
-    ];
-  });
+
+      const productQuestion = {
+        id: `${fact.id}-product`,
+        type: "product_to_description",
+        prompt: `A team selected ${fact.product} for a production data platform. Which requirement most strongly justifies that decision?`,
+        answers: [neutralizeProductNames(fact.description), ...distractorDescriptions],
+        correct: 0,
+        explanation: fact.explanation,
+        tags: fact.tags,
+        priority: fact.priority,
+        confusionSet: fact.confusionSet
+      };
+
+      if (new Set(productQuestion.answers.map(normalizeText)).size !== 3) {
+        return [descriptionQuestion];
+      }
+
+      return [productQuestion, descriptionQuestion];
+    });
 
   function shouldExclude(question) {
-    const factId = question.id.replace(/-(product|description)$/, "");
-    return REVIEW_EXCLUDED_FACT_IDS.has(factId) || hasAnswerNameLeak(question);
+    return hasAnswerNameLeak(question);
   }
 
   const questions = generatedQuestions.filter((question) => !shouldExclude(question));
