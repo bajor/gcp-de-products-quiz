@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GCP Data Engineer Product Quiz</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="quiz-shell">
+      <header class="hero">
+        <p class="eyebrow">Professional Data Engineer drill</p>
+        <h1>GCP Data Engineer Product Quiz</h1>
+        <p class="lede">Fast product-recognition practice for choosing the right Google Cloud data service.</p>
+      </header>
+
+      <section class="controls" aria-label="Quiz controls">
+        <label>
+          Priority
+          <select id="priority-filter">
+            <option value="all">All priorities</option>
+            <option value="P0">P0 only</option>
+          </select>
+        </label>
+        <label>
+          Domain
+          <select id="domain-filter">
+            <option value="all">All domains</option>
+          </select>
+        </label>
+        <label class="checkbox-control">
+          <input id="wrong-only" type="checkbox">
+          Wrong answers only
+        </label>
+      </section>
+
+      <section class="card" aria-live="polite">
+        <div class="stats-row">
+          <p id="question-count">Question 0 / 0</p>
+          <p id="score">Score: 0 / 0</p>
+        </div>
+
+        <div id="empty-state" class="empty-state" hidden>
+          <h2>No questions match these filters.</h2>
+          <p>Change the filters or answer some questions incorrectly to use review mode.</p>
+        </div>
+
+        <div id="quiz-panel">
+          <p id="question-type" class="question-type"></p>
+          <h2 id="prompt" class="prompt"></h2>
+          <div id="answers" class="answers"></div>
+          <p id="explanation" class="explanation" hidden></p>
+          <button id="next-button" class="primary-button" type="button" disabled>Next</button>
+        </div>
+      </section>
+
+      <footer class="footer-actions">
+        <p id="bank-status"></p>
+        <button id="reset-button" class="text-button" type="button">Reset progress</button>
+      </footer>
+    </main>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

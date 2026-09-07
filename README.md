@@ -1,5 +1,7 @@
 # GCP Professional Data Engineer — Product Quiz
 
+[Open the quiz](index.html)
+
 ## Project draft / implementation prompt for coding agents
 
 Build the **simplest possible static quiz website** that helps an experienced data engineer prepare for the **Google Cloud Professional Data Engineer** certification specifically by learning **which Google Cloud product/service is used for what** and by distinguishing products that are easy to confuse on the exam.
