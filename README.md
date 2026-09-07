@@ -1,6 +1,6 @@
 # GCP Professional Data Engineer — Product Quiz
 
-[Open the quiz](index.html)
+[Open the quiz](https://bajor.github.io/gcp-de-products-quiz/)
 
 ## Project draft / implementation prompt for coding agents
 
