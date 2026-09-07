@@ -317,7 +317,52 @@
     }
   });
 
-  const questions = FACTS.flatMap((fact) => {
+  const PRODUCT_BRANDS = [
+    "analytics hub", "alloydb", "apache beam", "artifact registry", "biglake", "bigquery", "bigtable",
+    "cloud composer", "cloud data fusion", "cloud functions", "cloud kms", "cloud logging", "cloud monitoring",
+    "cloud run", "cloud sql", "cloud storage", "cloud vpn", "dataflow", "dataform", "database migration service",
+    "dataplex", "dataproc", "datastream", "firestore", "iam", "looker", "memorystore", "private google access",
+    "private service connect", "pub sub", "secret manager", "sensitive data protection", "spanner",
+    "storage transfer service", "transfer appliance", "vertex ai", "workflows"
+  ];
+
+  function normalizeText(value) {
+    return ` ${value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `;
+  }
+
+  function answerTerms(question, answer) {
+    const normalizedAnswer = normalizeText(answer).trim();
+    const terms = new Set([normalizedAnswer]);
+
+    PRODUCT_BRANDS.forEach((brand) => {
+      if (normalizedAnswer.includes(brand)) {
+        terms.add(brand);
+      }
+    });
+
+    if (question.type === "description_to_product") {
+      const tokens = normalizedAnswer.split(" ");
+      for (let size = 2; size <= Math.min(4, tokens.length); size += 1) {
+        for (let start = 0; start <= tokens.length - size; start += 1) {
+          terms.add(tokens.slice(start, start + size).join(" "));
+        }
+      }
+    }
+
+    return [...terms].filter((term) => term.length > 2);
+  }
+
+  function hasAnswerNameLeak(question) {
+    const prompt = normalizeText(question.prompt);
+    const terms = new Set(question.answers.flatMap((answer) => answerTerms(question, answer)));
+
+    return [...terms].some((term) => {
+      const matchingAnswers = question.answers.filter((answer) => normalizeText(answer).includes(` ${term} `));
+      return matchingAnswers.length === 1 && prompt.includes(` ${term} `);
+    });
+  }
+
+  const generatedQuestions = FACTS.flatMap((fact) => {
     const distractorDescriptions = fact.distractors.map((product) => primaryDescriptions.get(product) || `${product} is a plausible distractor, but it does not match this defining use case.`);
 
     return [
@@ -346,6 +391,10 @@
     ];
   });
 
+  const questions = generatedQuestions.filter((question) => !hasAnswerNameLeak(question));
+  const excludedQuestionIds = generatedQuestions.filter(hasAnswerNameLeak).map((question) => question.id);
+
   globalThis.GCP_DE_QUESTIONS = questions;
   globalThis.GCP_DE_QUESTION_FACTS = FACTS;
+  globalThis.GCP_DE_EXCLUDED_QUESTION_IDS = excludedQuestionIds;
 })();
